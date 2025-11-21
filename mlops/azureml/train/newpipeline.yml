@@ -11,17 +11,6 @@ description: Pipeline for data preparation, training, hyperparameter sweep, and 
 inputs:
   input_data_uri:
     type: uri_file
-  test_train_ratio:
-    type: number
-    default: 0.2
-
-  # Optional – only needed if your train.yml uses them as fixed params
-  n_estimators:
-    type: number
-    default: 100
-  max_depth:
-    type: number
-    default: 5
 
 # -------------------------
 # Pipeline-level outputs
@@ -66,9 +55,10 @@ jobs:
       --train_data ${{outputs.train_data}}
       --test_data ${{outputs.test_data}}
     inputs:
-      # Map pipeline inputs -> job inputs
+      # Map pipeline input -> job input
       data: ${{parent.inputs.input_data_uri}}
-      test_train_ratio: ${{parent.inputs.test_train_ratio}}
+      # Hard-coded 0.2 here instead of a pipeline parameter
+      test_train_ratio: 0.2
     outputs:
       # Map job outputs -> pipeline outputs
       train_data: ${{parent.outputs.train_data}}
@@ -85,12 +75,13 @@ jobs:
       train_data: ${{parent.jobs.prep_data.outputs.train_data}}
       test_data: ${{parent.jobs.prep_data.outputs.test_data}}
     outputs:
-      # Best model; used by register_model
+      # Best model from the sweep, used by register_model
       model_output:
         type: mlflow_model
+
     sampling_algorithm: random
 
-    # Command component defining the training job
+    # Command component definition for training
     trial: ./train.yml
 
     search_space:
@@ -123,6 +114,7 @@ jobs:
       python register.py
       --model ${{inputs.model}}
     inputs:
+      # Best model from sweep step
       model: ${{parent.jobs.sweep_step.outputs.model_output}}
     outputs:
       model_info_output_path: ${{parent.outputs.model_info_output_path}}
