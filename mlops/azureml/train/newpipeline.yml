@@ -5,17 +5,25 @@ experiment_name: random_forest_training_pipeline  # Provide the experiment name
 description: Pipeline for data preparation, training, prediction, and model registration  # Provide the description for the pipeline
 
 inputs:
-  raw_data:
+  input_data_uri:
     type: uri_file
-    path: azureml:used-cars-data@latest
+  test_train_ratio:
+    type: number
+    default: 0.2
+  n_estimators:
+    type: number
+    default: 100
+  max_depth:
+    type: number
+    default: 5
 
 outputs:
-  train_data:
-    type: uri_folder  # Specify the type for train_data output
-  test_data:
-    type: uri_folder  # Specify the type for test_data output
-  model_info_output_path:
-    type: uri_folder  # Specify the type for model_info_output_path output
+  pipeline_job_train_data:
+    mode: rw_mount
+  pipeline_job_test_data:
+    mode: rw_mount
+  pipeline_job_best_model:
+    mode: rw_mount
 
 settings:
   default_datastore: azureml:workspaceblobstore
@@ -29,12 +37,12 @@ jobs:
     code: ../../../data-science/src
     command: >-
       python prep.py  
-      --raw_data ${{inputs.raw_data}} 
+      --raw_data ${{inputs.data}} 
       --train_data ${{outputs.train_data}}
       --test_data ${{outputs.test_data}} 
     environment: azureml:used_car_analysis@latest
     inputs:
-      raw_data: ${{parent.inputs.raw_data}}
+      raw_data: ${{parent.inputs.data}}
     outputs:
       train_data: ${{parent.outputs.train_data}}
       test_data: ${{parent.outputs.test_data}}
