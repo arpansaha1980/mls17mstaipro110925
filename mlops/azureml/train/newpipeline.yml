@@ -87,25 +87,4 @@ jobs:
       max_concurrent_trials: 10
       timeout: 7200
 
-  ########################################
-  # 3. Model registration (register.py)
-  ########################################
-  register_model:
-    type: command
-    name: register_model
-    display_name: register_model
-    code: ../../../data-science/src       # folder containing register.py
-    environment: azureml:used_car_analysis@latest
-    command: >-
-      python register.py
-      --model_name ${{inputs.model_name}}
-      --model_path ${{inputs.model_path}}
-      --model_info_output_path ${{outputs.model_info_output_path}}
-    inputs:
-      # Simple scalar string input – no 'type', no 'default' object
-      model_name: "used_cars_price_prediction_model"
-      # Consume best model from sweep step
-      model_path: ${{parent.jobs.sweep_step.outputs.model_output}}
-    outputs:
-      # Local job output folder where register.py writes model_info.json
-      model_info_output_path: {}
+ 
