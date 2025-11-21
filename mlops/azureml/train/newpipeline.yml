@@ -3,26 +3,17 @@ type: pipeline
 
 display_name: used_car_analysis_model
 experiment_name: random_forest_training_pipeline
-description: Pipeline for data preparation, training, hyperparameter sweep, and model registration
+description: Minimal pipeline: data prep + hyperparameter sweep
 
-# -------------------------
-# Pipeline-level inputs
-# -------------------------
 inputs:
   input_data_uri:
     type: uri_file
 
-# -------------------------
-# Global settings
-# -------------------------
 settings:
   default_datastore: azureml:workspaceblobstore
   default_compute: azureml:cpu-cluster1
   continue_on_step_failure: false
 
-# -------------------------
-# Jobs in the pipeline
-# -------------------------
 jobs:
 
   ########################################
@@ -30,9 +21,8 @@ jobs:
   ########################################
   prep_data:
     type: command
-    name: data_preparation
     display_name: Data preparation for training
-    code: ../../../data-science/src       # folder containing prep.py
+    code: ../../../data-science/src          # folder containing prep.py
     environment: azureml:used_car_analysis@latest
     command: >-
       python prep.py
@@ -41,31 +31,33 @@ jobs:
       --train_data ${{outputs.train_data}}
       --test_data ${{outputs.test_data}}
     inputs:
-      # Map pipeline input -> job input
-      data: ${{parent.inputs.input_data_uri}}
-      # Hard-coded split ratio (no pipeline numeric input)
+      data:
+        type: uri_file
+        path: ${{parent.inputs.input_data_uri}}
+      # scalar param, no type object here
       test_train_ratio: 0.2
     outputs:
-      # Let Azure ML infer types; just declare they exist
-      train_data: {}
-      test_data: {}
+      train_data:
+        type: uri_folder
+      test_data:
+        type: uri_folder
 
   ########################################
-  # 2. Hyperparameter sweep (uses train.yml)
+  # 2. Hyperparameter sweep (train.yml)
   ########################################
   sweep_step:
     type: sweep
-    name: sweep_job
     display_name: sweep_job
+    sampling_algorithm: random
+
+    # Inputs to the trial component (train.yml)
     inputs:
       train_data: ${{parent.jobs.prep_data.outputs.train_data}}
       test_data: ${{parent.jobs.prep_data.outputs.test_data}}
+
     outputs:
-      # Best model artifact from sweep (MLflow model)
       model_output:
         type: mlflow_model
-
-    sampling_algorithm: random
 
     # Command component defining the training job
     trial: ./train.yml
@@ -86,5 +78,3 @@ jobs:
       max_total_trials: 20
       max_concurrent_trials: 10
       timeout: 7200
-
- 
