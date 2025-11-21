@@ -26,7 +26,7 @@ def main():
 
     # Encoding the categorical 'Type' column
     label_encoder = LabelEncoder()
-    df['Type'] = label_encoder.fit_transform(df['Type'])
+    df['Segment'] = label_encoder.fit_transform(df['Segment'])
 
     # Log the first few rows of the dataframe
     logging.info(f"Transformed Data:\n{df.head()}")
