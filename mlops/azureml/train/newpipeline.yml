@@ -57,7 +57,7 @@ jobs:
     inputs:
       # Map pipeline input -> job input
       data: ${{parent.inputs.input_data_uri}}
-      # Hard-coded 0.2 here instead of a pipeline parameter
+      # Hard-coded split ratio here
       test_train_ratio: 0.2
     outputs:
       # Map job outputs -> pipeline outputs
@@ -81,7 +81,7 @@ jobs:
 
     sampling_algorithm: random
 
-    # Command component definition for training
+    # Command component defining the training job
     trial: ./train.yml
 
     search_space:
@@ -112,9 +112,13 @@ jobs:
     environment: azureml:used_car_analysis@latest
     command: >-
       python register.py
-      --model ${{inputs.model}}
+      --model_name ${{inputs.model_name}}
+      --model_path ${{inputs.model_path}}
+      --model_info_output_path ${{outputs.model_info_output_path}}
     inputs:
-      # Best model from sweep step
-      model: ${{parent.jobs.sweep_step.outputs.model_output}}
+      model_name:
+        type: string
+        default: "used_cars_price_prediction_model"
+      model_path: ${{parent.jobs.sweep_step.outputs.model_output}}
     outputs:
       model_info_output_path: ${{parent.outputs.model_info_output_path}}
