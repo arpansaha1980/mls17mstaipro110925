@@ -29,11 +29,11 @@ inputs:
 # -------------------------
 outputs:
   train_data:
-    type: str  # Specify the type for train_data output
+    type:   # Specify the type for train_data output
   test_data:
-    type: str  # Specify the type for test_data output
+    type:   # Specify the type for test_data output
   model_info_output_path:
-    type: str  # Specify the type for model_info_output_path output
+    type:   # Specify the type for model_info_output_path output
 
 
 # -------------------------
