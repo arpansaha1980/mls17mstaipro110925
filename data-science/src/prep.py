@@ -19,15 +19,11 @@ def parse_args():
     return args
     
 def main(args):
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--data", type=str, help="Path to input data")
-    parser.add_argument("--test_train_ratio", type=float, default=0.2)
-    parser.add_argument("--train_data", type=str, help="Path to save train data")
-    parser.add_argument("--test_data", type=str, help="Path to save test data")
+   
     args = parser.parse_args()
 
     # Start MLflow Run
-    mlflow.start_run()
+    # mlflow.start_run()
 
     # Log arguments
     logging.info(f"Input data path: {args.data}")
@@ -55,7 +51,27 @@ def main(args):
     # Log completion
     mlflow.log_metric("train_size", len(train_df))
     mlflow.log_metric("test_size", len(test_df))
+    # mlflow.end_run()
+ if __name__ == "__main__":
+    mlflow.start_run()
+
+    # Parse Arguments
+    args = _______()  # Call the function to parse arguments
+
+    lines = [
+        f"Raw data path: {args._______}",  # Print the raw_data path
+        f"Train dataset output path: {args._______}",  # Print the train_data path
+        f"Test dataset path: {args._______}",  # Print the test_data path
+        f"Test-train ratio: {args._______}",  # Print the test_train_ratio
+    ]
+
+    for line in lines:
+        print(line)
+    
+    main(args)
+
     mlflow.end_run()
+   
 
 if __name__ == "__main__":
     main()
