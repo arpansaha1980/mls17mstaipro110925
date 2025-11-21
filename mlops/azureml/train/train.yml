@@ -1,27 +1,27 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command  # This is correct for trial definitions
-name: train_model
-display_name: train_model
+name: used_car_price_model
+display_name: Random Forest Regressor Model for used car price Prediction
 inputs: 
   train_data:
-    type: uri_folder
+    type: uri_folder  # Specify the type for train_data
   test_data:
-    type: uri_folder
-  criterion:
-    type: string
-    default: gini
+    type: uri_folder # Specify the type for test_data
+  n_estimators:
+    type: integer  
+    default: 100 
   max_depth:
-    type: integer
-    default: 5
+    type: integer  # Specify the type for max_depth
+    default: None # Provide the default value for max_depth
 outputs:
   model_output:
-    type: mlflow_model
+    type: mlflow_model # Specify the type for model_output
 code: ../../../data-science/src
 command: >-
   python train.py 
   --train_data ${{inputs.train_data}}
   --test_data ${{inputs.test_data}}
-  --criterion ${{inputs.criterion}}
+  --n_estimators ${{inputs.n_estimators}}
   --max_depth ${{inputs.max_depth}}
   --model_output ${{outputs.model_output}}
-environment: azureml:machine-failure-train-env@latest
+environment: azureml:used_car_analysis@latest

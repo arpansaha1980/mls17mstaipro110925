@@ -1,86 +1,102 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License.
-"""
-Trains ML model using the training dataset and evaluates using the test dataset. Saves trained model.
-"""
-
+import os
 import argparse
-from pathlib import Path
-import pandas as pd
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import accuracy_score
 import mlflow
 import mlflow.sklearn
-from matplotlib import pyplot as plt
+import pandas as pd
 
-def parse_args():
-    '''Parse input arguments'''
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_squared_error
 
-    parser = argparse.ArgumentParser("train")
-    parser.add_argument("--train_data", type=str, help="Path to train dataset")
-    parser.add_argument("--test_data", type=str, help="Path to test dataset")
-    parser.add_argument("--model_output", type=str, help="Path of output model")
-    parser.add_argument('--criterion', type=str, default='gini',
-                        help='The function to measure the quality of a split')
-    parser.add_argument('--max_depth', type=int, default=None,
-                        help='The maximum depth of the tree. If None, then nodes are expanded until all the leaves contain less than min_samples_split samples.')
+mlflow.start_run()  # Start the MLflow experiment run
 
+os.makedirs("./outputs", exist_ok=True)  # Create the "outputs" directory if it doesn't exist
+
+
+def select_first_file(path: str) -> str:
+    """Selects the first file in a folder, assuming there's only one file.
+    Args:
+        path (str): Path to the directory or file to choose.
+    Returns:
+        str: Full path of the selected file.
+    """
+    files = os.listdir(path)
+    return os.path.join(path, files[0])
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--train_data", type=str, help="Path to train data")
+    parser.add_argument("--test_data", type=str, help="Path to test data")
+    parser.add_argument(
+        "--n_estimators",
+        type=int,
+        default=100,
+        help="Number of trees in the random forest (default: 100)",
+    )
+    parser.add_argument(
+        "--max_depth",
+        type=int,
+        default=None,
+        help="Maximum depth of the trees (default: None)",
+    )
+    parser.add_argument(
+        "--model_output",
+        type=str,
+        help="Path of output model",
+    )
     args = parser.parse_args()
 
-    return args
-
-def main(args):
-    '''Read train and test datasets, train model, evaluate model, save trained model'''
-
-    # Read train and test data from CSV
-    train_df = pd.read_csv(Path(args.train_data)/"train.csv")
-    test_df = pd.read_csv(Path(args.test_data)/"test.csv")
-
-    # Split the data into input(X) and output(y)
-    y_train = train_df['Failure']
-    X_train = train_df.drop(columns=['Failure'])
-    y_test = test_df['Failure']
-    X_test = test_df.drop(columns=['Failure'])
-
-    # Initialize and train a Decision Tree Classifier
-    model = DecisionTreeClassifier(criterion=args.criterion, max_depth=args.max_depth)
-    model.fit(X_train, y_train)
-
-    # Log model hyperparameters
-    mlflow.log_param("model", "DecisionTreeClassifier")
-    mlflow.log_param("criterion", args.criterion)
+    # Log hyperparameters to MLflow
+    mlflow.log_param("n_estimators", args.n_estimators)
     mlflow.log_param("max_depth", args.max_depth)
 
-    # Predict using the Decision Tree Model on test data
-    yhat_test = model.predict(X_test)
+    # Load datasets (select the first file in each provided folder)
+    train_df = pd.read_csv(select_first_file(args.train_data))
+    test_df = pd.read_csv(select_first_file(args.test_data))
 
-    # Compute and log accuracy score
-    accuracy = accuracy_score(y_test, yhat_test)
-    print(f'Accuracy of Decision Tree classifier on test set: {accuracy:.2f}')
-    # Logging the accuracy score as a metric
-    mlflow.log_metric("Accuracy", float(accuracy))
+    # ---- Adjust this if your target column has a different name ----
+    target_col = "price"
 
-    # Save the model
-    mlflow.sklearn.save_model(sk_model=model, path=args.model_output)
+    # Split into features (X) and target (y)
+    y_train = train_df[target_col].values
+    X_train = train_df.drop(target_col, axis=1).values
+
+    y_test = test_df[target_col].values
+    X_test = test_df.drop(target_col, axis=1).values
+
+    # Initialize Random Forest Regressor
+    rf_model = RandomForestRegressor(
+        n_estimators=args.n_estimators,
+        max_depth=args.max_depth,
+        random_state=42,
+        n_jobs=-1,
+    )
+
+    # Train the model
+    rf_model.fit(X_train, y_train)
+
+    # Predictions on test set
+    y_pred = rf_model.predict(X_test)
+
+    # Evaluate using Mean Squared Error (MSE)
+    mse = mean_squared_error(y_test, y_pred)
+    print(f"Mean Squared Error (MSE) of Random Forest Regressor on test set: {mse:.4f}")
+
+    # Log MSE to MLflow
+    mlflow.log_metric("MSE", float(mse))
+
+    # Optionally save MSE as a small artifact
+    mse_path = os.path.join("outputs", "mse.txt")
+    with open(mse_path, "w") as f:
+        f.write(str(mse))
+    mlflow.log_artifact(mse_path)
+
+    # Save the trained model as an MLflow model
+    mlflow.sklearn.save_model(rf_model, args.model_output)
+
+    print("Training complete. Final MSE logged to MLflow.")
+    mlflow.end_run()  # End the MLflow experiment run
+
 
 if __name__ == "__main__":
-    
-    mlflow.start_run()
-
-    # Parse Arguments
-    args = parse_args()
-
-    lines = [
-        f"Train dataset input path: {args.train_data}",
-        f"Test dataset input path: {args.test_data}",
-        f"Model output path: {args.model_output}",
-        f"Criterion: {args.criterion}",
-        f"Max Depth: {args.max_depth}"
-    ]
-
-    for line in lines:
-        print(line)
-
-    main(args)
-
-    mlflow.end_run()
+    main()
