@@ -28,15 +28,13 @@ inputs:
 # Pipeline-level outputs
 # -------------------------
 outputs:
-  pipeline_job_train_data:
-    type: uri_folder
-    mode: rw_mount
-  pipeline_job_test_data:
-    type: uri_folder
-    mode: rw_mount
-  pipeline_job_best_model:
-    type: mlflow_model
-    mode: rw_mount
+  train_data:
+    type: str  # Specify the type for train_data output
+  test_data:
+    type: str  # Specify the type for test_data output
+  model_info_output_path:
+    type: str  # Specify the type for model_info_output_path output
+
 
 # -------------------------
 # Global settings
@@ -87,7 +85,8 @@ jobs:
       test_data: ${{parent.jobs.prep_data.outputs.test_data}}
     outputs:
       # Best model from the sweep, exposed at pipeline level
-      model_output: ${{parent.outputs.pipeline_job_best_model}}
+      model_output:
+        type: mlflow_model
     sampling_algorithm: random
 
     # This points to your training command component definition
@@ -118,10 +117,14 @@ jobs:
     name: register_model
     display_name: register_model
     code: ../../../data-science/src       # folder containing register.py
-    environment: azureml:used_car_analysis@latest
     command: >-
-      python register.py
-      --model ${{inputs.model}}
+      python register.py 
+      --model_name ${{inputs.model_name}} 
+      --model_path ${{inputs.model_path}} 
+      --model_info_output_path ${{outputs.model_info_output_path}}
+    environment: azureml:used_car_analysis@latest
     inputs:
-      # Path to the best model (MLflow model dir) from sweep_step
-      model: ${{parent.jobs.sweep_step.outputs.model_output}}
+      model_name: "used_cars_price_prediction_model"
+      model_path: ${{parent.jobs.sweep_step.outputs.model_output}}
+    outputs:
+      model_info_output_path: ${{parent.outputs.model_info_output_path}}
