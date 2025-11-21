@@ -52,26 +52,14 @@ def main(args):
     mlflow.log_metric("train_size", len(train_df))
     mlflow.log_metric("test_size", len(test_df))
     # mlflow.end_run()
+
  if __name__ == "__main__":
     mlflow.start_run()
 
     # Parse Arguments
-    args = _______()  # Call the function to parse arguments
-
-    lines = [
-        f"Raw data path: {args._______}",  # Print the raw_data path
-        f"Train dataset output path: {args._______}",  # Print the train_data path
-        f"Test dataset path: {args._______}",  # Print the test_data path
-        f"Test-train ratio: {args._______}",  # Print the test_train_ratio
-    ]
-
-    for line in lines:
-        print(line)
-    
+    args = parse_args() # Call the function to parse arguments
     main(args)
 
     mlflow.end_run()
    
 
-if __name__ == "__main__":
-    main()
