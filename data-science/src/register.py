@@ -5,12 +5,24 @@ import mlflow
 import pandas as pd
 from pathlib import Path
 
-mlflow.start_run()  # Starting the MLflow experiment run
+def parse_args():
+    '''Parse input arguments'''
 
-def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--model_name', type=_____, help='Name under which model will be registered')  # Hint: Specify the type for model_name (str)
+    parser.add_argument('--model_path', type=_____, help='Model directory')  # Hint: Specify the type for model_path (str)
+    parser.add_argument("--model_info_output_path", type=_____, help="Path to write model info JSON")  # Hint: Specify the type for model_info_output_path (str)
+    args, _ = parser.parse_known_args()
+    print(f'Arguments: {args}')
+
+    return args
+    
+def main(args):
     # Argument parser setup for command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", type=str, help="Path to the trained model")  # Path to the trained model artifact
+    parser.add_argument('--model_name', type=_____, help='Name under which model will be registered')  # Hint: Specify the type for model_name (str)
+    parser.add_argument('--model_path', type=_____, help='Model directory')  # Hint: Specify the type for model_path (str)
+    parser.add_argument("--model_info_output_path", type=_____, help="Path to write model info JSON")  #
     args = parser.parse_args()
 
     # Load the trained model from the provided path
@@ -25,8 +37,24 @@ def main():
         artifact_path="Random_forest_used_car_price_prediction"  # Path to store model artifacts
     )
 
-    # End the MLflow run
-    mlflow.end_run()
+  
 
 if __name__ == "__main__":
-    main()
+    
+    mlflow.start_run()
+    
+    # Parse Arguments
+    args = parse_args()
+    
+    lines = [
+        f"Model name: {args.model_name}",
+        f"Model path: {args.model_path}",
+        f"Model info output path: {args.model_info_output_path}"
+    ]
+
+    for line in lines:
+        print(line)
+
+    main(args)
+
+    mlflow.end_run()
