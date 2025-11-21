@@ -60,7 +60,7 @@ jobs:
     environment: azureml:used_car_analysis@latest
     command: >-
       python prep.py
-      --data ${{inputs.data}}
+      --data ${{inputs.input_data_uri}}
       --test_train_ratio ${{inputs.test_train_ratio}}
       --train_data ${{outputs.train_data}}
       --test_data ${{outputs.test_data}}
@@ -70,8 +70,8 @@ jobs:
       test_train_ratio: ${{parent.inputs.test_train_ratio}}
     outputs:
       # These map job outputs -> pipeline outputs
-      train_data: ${{parent.outputs.pipeline_job_train_data}}
-      test_data: ${{parent.outputs.pipeline_job_test_data}}
+      train_data: ${{parent.outputs.train_data}}
+      test_data: ${{parent.outputs.test_data}}
 
   ########################################
   # 2. Hyperparameter sweep (uses train.yml)
