@@ -75,7 +75,7 @@ jobs:
     code: ../../../data-science/src
     command: >-
       python register.py 
-      --model_name ${{inputs.model_name}} 
+      --model_name ${{inputs.model}} 
     environment: azureml:used-cars-train@latest
     inputs:
       model_name: "used_cars_price_prediction_model"
