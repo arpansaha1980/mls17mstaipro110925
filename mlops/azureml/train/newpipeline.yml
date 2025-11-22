@@ -1,8 +1,8 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
 type: pipeline
-display_name: used_car_pipeline  # Provide the display name for the pipeline
-experiment_name: exp_used_car_pipeline  # Provide the experiment name
-description: exp_used_car_pipeline  # Provide the description for the pipeline
+display_name: used_car_pipeline
+experiment_name: exp_used_car_pipeline
+description: exp_used_car_pipeline
 
 inputs:
   raw_data:
@@ -19,21 +19,27 @@ outputs:
   model_info_output_path:
     type: uri_folder
     mode: rw_mount
+
 settings:
   default_datastore: azureml:workspaceblobstore
   default_compute: azureml:cpu-cluster1
   continue_on_step_failure: false
 
 jobs:
+
+  ###########################################################################
+  # 1️⃣ DATA PREP JOB
+  ###########################################################################
   prep_data:
-    name: data_preparation # Provide the job name
-    display_name: Data preparation for training  # Provide the display name for the job
+    name: data_preparation
+    display_name: Data preparation for training
+    type: command
     code: ../../../data-science/src
     command: >-
-      python prep.py  
-      --data ${{inputs.raw_data}} 
+      python prep.py
+      --data ${{inputs.raw_data}}
       --train_data ${{outputs.train_data}}
-      --test_data ${{outputs.test_data}} 
+      --test_data ${{outputs.test_data}}
     environment: azureml:used-cars-train@latest
     inputs:
       raw_data: ${{parent.inputs.raw_data}}
@@ -41,81 +47,83 @@ jobs:
       train_data: ${{parent.outputs.train_data}}
       test_data: ${{parent.outputs.test_data}}
 
- sweep_step:
-  name: sweep_job
-  display_name: sweep_job
-  type: sweep
+  ###########################################################################
+  # 2️⃣ SWEEP JOB (HYPERPARAMETER TUNING)
+  ###########################################################################
+  sweep_step:
+    name: sweep_job
+    display_name: sweep_job
+    type: sweep
 
-  # 1) The trial job definition (inline, not file:)
-  trial:
-    type: command
-    code: ../../../data-science/src
-    environment: azureml:used-cars-train@latest
-    command: >-
-      python model_train.py
-      --train_data ${{inputs.train_data}}
-      --test_data ${{inputs.test_data}}
-      --n_estimators ${{inputs.n_estimators}}
-      --max_depth ${{inputs.max_depth}}
-      --model_output ${{outputs.model_output}}
+    # (A) TRIAL JOB DEFINITION (INLINE)
+    trial:
+      type: command
+      code: ../../../data-science/src
+      environment: azureml:used-cars-train@latest
+      command: >-
+        python model_train.py
+        --train_data ${{inputs.train_data}}
+        --test_data ${{inputs.test_data}}
+        --n_estimators ${{inputs.n_estimators}}
+        --max_depth ${{inputs.max_depth}}
+        --model_output ${{outputs.model_output}}
 
-    # Inputs/outputs as seen by the trial job itself
+      inputs:
+        train_data:
+          type: uri_folder
+        test_data:
+          type: uri_folder
+        n_estimators:
+          type: integer
+          default: 100
+        max_depth:
+          type: integer
+          default: 5
+
+      outputs:
+        model_output:
+          type: mlflow_model
+
+    # (B) PIPELINE → TRIAL INPUT MAPPING
     inputs:
-      train_data:
-        type: uri_folder
-      test_data:
-        type: uri_folder
-      n_estimators:
-        type: integer
-        default: 100
-      max_depth:
-        type: integer
-        default: 5
+      train_data: ${{parent.jobs.prep_data.outputs.train_data}}
+      test_data: ${{parent.jobs.prep_data.outputs.test_data}}
 
     outputs:
       model_output:
         type: mlflow_model
 
-  # 2) Wire pipeline outputs into the sweep job inputs
-  inputs:
-    train_data: ${{parent.jobs.prep_data.outputs.train_data}}
-    test_data:  ${{parent.jobs.prep_data.outputs.test_data}}
+    # (C) SEARCH SPACE
+    search_space:
+      n_estimators:
+        type: choice
+        values: [10, 20, 30, 50]
+      max_depth:
+        type: choice
+        values: [3, 5, 10]
 
-  outputs:
-    model_output:
-      type: mlflow_model
+    sampling_algorithm: random
 
-  # 3) Hyperparameter search space (keys match trial.inputs)
-  search_space:
-    n_estimators:
-      type: choice
-      values: [10, 20, 30, 50]
-    max_depth:
-      type: choice
-      values: [3, 5, 10]
+    objective:
+      goal: minimize
+      primary_metric: MSE
 
-  sampling_algorithm: random
+    limits:
+      max_total_trials: 12
+      max_concurrent_trials: 10
+      timeout: 7200
 
-  objective:
-    goal: minimize
-    primary_metric: MSE
-
-  limits:
-    max_total_trials: 12
-    max_concurrent_trials: 10
-    timeout: 7200
-
-     
-
-
+  ###########################################################################
+  # 3️⃣ REGISTER MODEL JOB
+  ###########################################################################
   register_model:
-    name: register_model  # Provide the job name
-    display_name: register_model  # Provide the display name for the job
+    name: register_model
+    display_name: Register model
+    type: command
     code: ../../../data-science/src
     command: >-
-      python register.py 
-      --model ${{inputs.model}} 
+      python register.py
+      --model ${{inputs.model}}
     environment: azureml:used-cars-train@latest
     inputs:
       model: ${{parent.jobs.sweep_step.outputs.model_output}}
-
