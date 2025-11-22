@@ -37,8 +37,8 @@ def main():
     parser.add_argument(
         "--max_depth",
         type=int,
-        default=None,
-        help="Maximum depth of the trees (default: None)",
+        default=5,
+        help="Maximum depth of the trees (default: 5)",
     )
     parser.add_argument(
         "--model_output",
