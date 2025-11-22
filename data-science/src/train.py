@@ -1,4 +1,3 @@
-%%writefile {src_dir_job_scripts}/model_train.py
 
 import os
 import argparse
