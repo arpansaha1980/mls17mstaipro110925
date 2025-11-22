@@ -26,7 +26,7 @@ jobs:
     environment: azureml:used_car_analysis@latest
     command: >-
       python prep.py
-      --data ${{inputs.input_data_uri}}
+      --data ${{parent.inputs.input_data_uri}}
       --train_data ${{outputs.train_data}}
       --test_data ${{outputs.test_data}}
       --test_train_ratio ${{inputs.test_train_ratio}}
@@ -35,7 +35,7 @@ jobs:
         type: uri_file
         path: ${{parent.inputs.input_data_uri}}
       # scalar param, no type object here
-      test_train_ratio: 0.2
+        test_train_ratio: 0.2
     outputs:
       train_data:
         type: uri_folder
