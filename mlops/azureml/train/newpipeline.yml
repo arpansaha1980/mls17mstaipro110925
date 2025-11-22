@@ -27,9 +27,9 @@ jobs:
     command: >-
       python prep.py
       --data ${{inputs.data}}
-      --test_train_ratio ${{inputs.test_train_ratio}}
       --train_data ${{outputs.train_data}}
       --test_data ${{outputs.test_data}}
+      --test_train_ratio ${{inputs.test_train_ratio}}
     inputs:
       data:
         type: uri_file
