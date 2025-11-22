@@ -21,7 +21,7 @@ outputs:
     mode: rw_mount
 settings:
   default_datastore: azureml:workspaceblobstore
-  default_compute: cpu-cluster1
+  default_compute: azureml:cpu-cluster1
   continue_on_step_failure: false
 
 jobs:
