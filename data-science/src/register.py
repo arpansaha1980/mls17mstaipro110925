@@ -10,7 +10,7 @@ mlflow.start_run()  # Starting the MLflow experiment run
 def main():
     # Argument parser setup for command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model_name", type=str, help="Path to the trained model")  # Path to the trained model artifact
+    parser.add_argument("--model", type=str, help="Path to the trained model")  # Path to the trained model artifact
     args = parser.parse_args()
 
     # Load the trained model from the provided path
