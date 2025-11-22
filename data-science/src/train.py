@@ -42,7 +42,7 @@ def main():
     )
     parser.add_argument(
         "--model_output",
-        type=str,
+        type=mlflow_model,
         help="Path of output model",
     )
     args = parser.parse_args()
