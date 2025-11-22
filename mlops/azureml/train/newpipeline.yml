@@ -41,33 +41,70 @@ jobs:
       train_data: ${{parent.outputs.train_data}}
       test_data: ${{parent.outputs.test_data}}
 
-  sweep_step:
-    name: sweep_job
-    display_name: sweep_job  # Hint: Provide the display name for the job
-    type: sweep
+ sweep_step:
+  name: sweep_job
+  display_name: sweep_job
+  type: sweep
+
+  # 1) The trial job definition (inline, not file:)
+  trial:
+    type: command
+    code: ../../../data-science/src
+    environment: azureml:used-cars-train@latest
+    command: >-
+      python model_train.py
+      --train_data ${{inputs.train_data}}
+      --test_data ${{inputs.test_data}}
+      --n_estimators ${{inputs.n_estimators}}
+      --max_depth ${{inputs.max_depth}}
+      --model_output ${{outputs.model_output}}
+
+    # Inputs/outputs as seen by the trial job itself
     inputs:
-      train_data: ${{parent.jobs.prep_data.outputs.train_data}}
-      test_data: ${{parent.jobs.prep_data.outputs.test_data}}
+      train_data:
+        type: uri_folder
+      test_data:
+        type: uri_folder
+      n_estimators:
+        type: integer
+        default: 100
+      max_depth:
+        type: integer
+        default: 5
+
     outputs:
       model_output:
         type: mlflow_model
-    trial:
-     file: ./train.yml    
-    sampling_algorithm: random  # Specify the sampling algorithm
-    search_space:
-      n_estimators:
-        type: choice
-        values: [10, 20, 30, 50]
-      max_depth:
-        type: choice  # Specify the type for max_depth
-        values: [3, 5, 10]  # Provide the values for max_depth
-    objective:
-      goal: minimize
-      primary_metric: MSE
-    limits:
-      max_total_trials: 12
-      max_concurrent_trials: 10
-      timeout: 7200
+
+  # 2) Wire pipeline outputs into the sweep job inputs
+  inputs:
+    train_data: ${{parent.jobs.prep_data.outputs.train_data}}
+    test_data:  ${{parent.jobs.prep_data.outputs.test_data}}
+
+  outputs:
+    model_output:
+      type: mlflow_model
+
+  # 3) Hyperparameter search space (keys match trial.inputs)
+  search_space:
+    n_estimators:
+      type: choice
+      values: [10, 20, 30, 50]
+    max_depth:
+      type: choice
+      values: [3, 5, 10]
+
+  sampling_algorithm: random
+
+  objective:
+    goal: minimize
+    primary_metric: MSE
+
+  limits:
+    max_total_trials: 12
+    max_concurrent_trials: 10
+    timeout: 7200
+
      
 
 
