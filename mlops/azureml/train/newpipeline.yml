@@ -78,5 +78,5 @@ jobs:
       --model_name ${{inputs.model}} 
     environment: azureml:used-cars-train@latest
     inputs:
-      model_name: "used_cars_price_prediction_model"
+      model: "used_cars_price_prediction_model"
 
