@@ -1,19 +1,8 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
 type: command
-
 display_name: used_car_model
 description: Train RandomForest model on prepared used car data
-
 code: ../../../data-science/src           # folder with train.py
-environment: azureml:used_car_analysis@latest
-
-command: >-
-  python train.py
-  --train_data ${{inputs.train_data}}
-  --test_data ${{inputs.test_data}}
-  --n_estimators ${{inputs.n_estimators}}
-  --max_depth ${{inputs.max_depth}}
-
 inputs:
   train_data:
     type: uri_folder
@@ -25,7 +14,13 @@ inputs:
   max_depth:
     type: integer
     default: 5
-
 outputs:
   model_output:
     type: mlflow_model
+command: >-
+  python train.py
+  --train_data ${{inputs.train_data}}
+  --test_data ${{inputs.test_data}}
+  --n_estimators ${{inputs.n_estimators}}
+  --max_depth ${{inputs.max_depth}}
+environment: azureml:used_car_analysis@latest
