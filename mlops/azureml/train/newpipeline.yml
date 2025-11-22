@@ -3,7 +3,7 @@ type: pipeline
 
 display_name: used_car_analysis_model
 experiment_name: random_forest_training_pipeline
-description: Minimal pipeline: data prep + hyperparameter sweep
+description: used_car_analysis_model
 
 inputs:
   input_data_uri:
