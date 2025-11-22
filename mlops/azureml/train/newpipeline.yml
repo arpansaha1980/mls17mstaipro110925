@@ -51,8 +51,8 @@ jobs:
     outputs:
       model_output:
         type: mlflow_model
+    trial: ./train.yml  # Refers to a separate command component    
     sampling_algorithm: random  # Specify the sampling algorithm
-    trial: ./train.yml  # Refers to a separate command component
     search_space:
       n_estimators:
         type: choice
@@ -64,9 +64,10 @@ jobs:
       goal: minimize
       primary_metric: MSE
     limits:
-      max_total_trials: 20
+      max_total_trials: 12
       max_concurrent_trials: 10
       timeout: 7200
+     
 
 
   register_model:
