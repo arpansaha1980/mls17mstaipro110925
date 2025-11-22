@@ -11,15 +11,17 @@ inputs:
 
 outputs:
   train_data:
-    type: rw_mount  # Specify the type for train_data output
+    type: uri_folder
+    mode: rw_mount
   test_data:
-    type: rw_mount  # Specify the type for test_data output
+    type: uri_folder
+    mode: rw_mount
   model_info_output_path:
-    type: rw_mount  # Specify the type for model_info_output_path output
-
+    type: uri_folder
+    mode: rw_mount
 settings:
   default_datastore: azureml:workspaceblobstore
-  default_compute: azureml:cpu-cluster
+  default_compute: azureml:cpu-cluster1
   continue_on_step_failure: false
 
 jobs:
