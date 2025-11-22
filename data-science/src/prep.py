@@ -6,24 +6,16 @@ import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 
-def parse_args():
-    '''Parse input arguments'''
-
-    parser = argparse.ArgumentParser()  # Create an ArgumentParser object
-    parser.add_argument("--data", type=str, help="Path to raw data")  # Specify the type for raw data (str)
-    parser.add_argument("--train_data", type=str, help="Path to train dataset")  # Specify the type for train data (str)
-    parser.add_argument("--test_data", type=str, help="Path to test dataset")  # Specify the type for test data (str)
-    parser.add_argument("--test_train_ratio", type=float, default=0.2)  # Specify the type (float) and default value (0.2) for test-train ratio
-    args = parser.parse_args()
-
-    return args
-    
-def main(args):
-   
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data", type=str, help="Path to input data")
+    parser.add_argument("--test_train_ratio", type=float, default=0.2)
+    parser.add_argument("--train_data", type=str, help="Path to save train data")
+    parser.add_argument("--test_data", type=str, help="Path to save test data")
     args = parser.parse_args()
 
     # Start MLflow Run
-    # mlflow.start_run()
+    mlflow.start_run()
 
     # Log arguments
     logging.info(f"Input data path: {args.data}")
@@ -51,15 +43,7 @@ def main(args):
     # Log completion
     mlflow.log_metric("train_size", len(train_df))
     mlflow.log_metric("test_size", len(test_df))
-    # mlflow.end_run()
-
- if __name__ == "__main__":
-    mlflow.start_run()
-
-    # Parse Arguments
-    args = parse_args() # Call the function to parse arguments
-    main(args)
-
     mlflow.end_run()
-   
 
+if __name__ == "__main__":
+    main()
